@@ -43,7 +43,7 @@ echo "
 		${ORANGE}                       |_|                              
 		${ORANGE}                ${RED}Version : 1.0
 
-		${GREEN}[${WHITE}-${GREENS}]${GREENS} Tool Created by parthanaboina praveen ${WHITE}
+		${GREEN}[${WHITE}-${GREENS}]${GREENS} Tool Created by MadhuVardhan ${WHITE}
 "
 }
 
@@ -117,7 +117,7 @@ function dockerin {
 	sudo apt-get update && sudo apt install -y docker-ce docker-ce-cli containerd.io && echo ${RED} "Docker installed!!!"
 	sleep 3
 	menu
-	elif [[ `cat /etc/os-release | grep 'ID=rhel\|ID_LIKE=fedora'` ]]; then
+	elif [[ `cat /etc/os-release | grep 'rhel\|ID_LIKE=fedora'` ]]; then
 	echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Yum detected installing docker.........."
 	sudo yum remove docker \
              	  docker-client \
@@ -154,7 +154,7 @@ function ansiblein {
 	menu
 	elif [[ `cat /etc/os-release | grep 'Centos'` ]]; then
 	sudo yum install epel-release && sudo yum install ansible && echo ${RED} "Ansible installed!!!"
-	elif [[ `cat /etc/os-release | grep 'ID="rhel"'` ]]; then
+	elif [[ `cat /etc/os-release | grep 'rhel\|ID_LIKE=fedora'` ]]; then
 	sudo yum install ansible && echo ${RED} "Ansible installed!!!"
 	else
 	echo -e "\n${RED}[${WHITE}!${RED}]${RED} Unsupported package manager" && sleep 2 && menu;
@@ -204,6 +204,27 @@ function kubeadmin {
 	sudo apt-get update && sudo apt-get install -y kubeadm && echo ${RED} "Kubeadm installed!!!"
 	sleep 3
 	menu
+	elif [[ `cat /etc/os-release | grep 'Rhel\|ID_LIKE="fedora"\|Centos\|ID_LIKE=rhel'` ]]; then
+	echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Yum detected installing kubeadmin.........."
+	seep 1
+	sudo yum install -y yum-utils && \
+	cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+exclude=kubelet kubeadm kubectl
+EOF
+
+	# Set SELinux in permissive mode (effectively disabling it)
+	sudo setenforce 0
+	sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+	sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+
+	sudo systemctl enable --now kubelet
 	else
 	echo -e "\n${RED}[${WHITE}!${RED}]${RED} Unsupported package manager" && sleep 2 && menu;
 	fi
@@ -219,6 +240,27 @@ function kubeletin {
 	sudo apt-get update && sudo apt-get install -y kubelet && echo ${RED} "Kubelet installed!!!"
 	sleep 3
 	menu
+	elif [[ `cat /etc/os-release | grep 'Rhel\|ID_LIKE="fedora"\|Centos\|ID_LIKE=rhel'` ]]; then
+        echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Yum detected installing kubelet.........."
+	sleep 1
+	sudo yum install -y yum-utils && \
+	cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+exclude=kubelet kubeadm kubectl
+EOF
+
+	# Set SELinux in permissive mode (effectively disabling it)
+	sudo setenforce 0
+	sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+	sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+
+	sudo systemctl enable --now kubelet
 	else
 	echo -e "\n${RED}[${WHITE}!${RED}]${RED} Unsupported package manager" && sleep 2 && menu;
 	fi
@@ -237,6 +279,15 @@ function kubectlin {
 	sudo apt-get update && sudo apt-get install -y kubectl && echo ${RED} "Kubectl installed!!!"
 	sleep 3
 	menu
+	elif [[ `cat /etc/os-release | grep 'Rhel\|ID_LIKE="fedora"\|Centos\|ID_LIKE=rhel'` ]]; then
+	echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Yum detected installing kubectl.........."
+	sleep 1
+	sudo yum install -y yum-utils && \
+	sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+	
+        sudo yum install -y kubectl && echo ${RED} "kubectlin installed!!!"
+	sleep 3
 	else
 	echo -e "\n${RED}[${WHITE}!${RED}]${RED} Unsupported package manager" && sleep 2 && menu;
 	fi
@@ -252,6 +303,13 @@ function minikubein {
 	sudo dpkg -i minikube_latest_amd64.deb && echo ${RED} "Minikube installed!!!"
 	sleep 3
 	menu
+	elif [[ `cat /etc/os-release | grep 'Rhel\|ID_LIKE="fedora"\|Centos\|ID_LIKE=rhel'` ]]; then
+	echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Yum detected installing minikube.........."
+	sleep 1
+	sudo yum install -y yum-utils && \
+	curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+	sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
 	else
 	echo -e "\n${RED}[${WHITE}!${RED}]${RED} Unsupported package manager" && sleep 2 && menu;
 	fi
@@ -268,6 +326,14 @@ function awsclin {
 	sudo ./aws/install && echo ${RED} "AWS CLI installed!!!"
 	sleep 3
 	menu
+	elif [[ `cat /etc/os-release | grep 'Rhel\|ID_LIKE="fedora"\|Centos\|ID_LIKE=rhel'` ]]; then
+	echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Yum detected installing awscli.........."
+	sleep 1
+	sudo yum install -y yum-utils && \
+	
+	curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+	unzip awscliv2.zip
+	sudo ./aws/install
 	else
 	echo -e "\n${RED}[${WHITE}!${RED}]${RED} Unsupported operating system" && sleep 2 && menu;
 	fi
@@ -293,6 +359,21 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOM
 sudo yum install google-cloud-sdk
+	sleep 3
+	menu
+	elif [[ `cat /etc/os-release | grep 'Rhel\|ID_LIKE="fedora"\|Centos\|ID_LIKE=rhel'` ]]; then
+	echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Yum detected installing gcloud.........."
+	sleep 1
+	sudo yum install -y yum-utils && \
+	sudo tee -a /etc/yum.repos.d/google-cloud-sdk.repo << EOM
+	[google-cloud-cli]
+name=Google Cloud CLI
+baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el8-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOM
 	else
 	echo -e "\n${RED}[${WHITE}!${RED}]${RED} Unsupported package manager" && sleep 2 && menu;
 	fi
@@ -308,6 +389,11 @@ function azureclin {
 	sudo apt-get update && sudo apt-get install azure-cli && echo ${RED} "Azure Cli installed!!!"
 	sleep 3
 	menu
+	elif [[ `cat /etc/os-release | grep 'Rhel\|ID_LIKE="fedora"\|Centos\|ID_LIKE=rhel'` ]]; then
+	echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Yum detected installing azurecli.........."
+	sleep 1
+	sudo yum install -y yum-utils && \
+	sudo dnf install -y https://packages.microsoft.com/config/rhel/9.0/packages-microsoft-prod.rpm		
 	else
 	echo -e "\n${RED}[${WHITE}!${RED}]${RED} Unsupported package manager" && sleep 2 && menu;
 	fi
@@ -316,11 +402,19 @@ function azureclin {
 
 function githubclin {
 	if [[ `cat /etc/os-release | grep 'Ubuntu\|ID_LIKE=ubuntu\|Debian\|ID_LIKE=debian'` ]]; then
-	echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Ubuntu/Debian based detected installing Github Cli.........."
+	echo -e "\n${GREENc}[${WHITE}+${GREENS}]${GREENS} Ubuntu/Debian based detected installing Github Cli.........."
 	curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg && \
 	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
 	sudo apt update && sudo apt install gh && echo ${RED} "Github Cli installed!!!"
 	sleep 3
+	menu
+	elif [[ `cat /etc/os-release | grep 'Rhel\|ID_LIKE="fedora"\|Centos\|ID_LIKE=rhel'` ]]; then
+	echo -e "\n${GREEN}[${WHITE}+${GREENS}]${GREENS} Yum detected installing githubcli.........."
+	sleep 1
+	sudo yum install -y yum-utils && \
+	sudo dnf install 'dnf-command(config-manager)'
+	sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+	sudo dnf install gh
 	
 	else
 	echo -e "\n${RED}[${WHITE}!${RED}]${RED} Unsupported operating system" && sleep 2 && menu;
